@@ -1,0 +1,23 @@
+{
+  "name": "nuxt-app",
+  "private": true,
+  "scripts": {
+    "build": "nuxt build",
+    "dev": "nuxt dev",
+    "generate": "nuxt generate",
+    "preview": "nuxt preview",
+    "postinstall": "nuxt prepare"
+  },
+  "devDependencies": {
+    "@nuxt/devtools": "latest",
+    "@nuxtjs/vuetify": "^1.12.3",
+    "nuxt": "^3.7.1"
+  },
+  "dependencies": {
+    "@prisma/client": "^5.2.0",
+    "axios": "^1.5.0",
+    "mdi": "^2.2.43",
+    "prisma": "^5.2.0",
+    "vuetify": "^3.3.15"
+  }
+}
