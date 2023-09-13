@@ -8,10 +8,13 @@
                         избранное</h3>
                     <v-card color="grey-darken-3" max-width="400" style="margin: 50px auto;">
                         <v-card-text>
-                            <v-text-field :loading="loading" density="compact" variant="solo" label="Введите город"
-                                append-inner-icon="mdi-magnify" prepend-inner-icon="mdi-star-outline" v-model="city"
-                                single-line hide-details @click:append-inner="searchWeather(city)"
+                            <v-text-field v-if="login" :loading="loading" density="compact" variant="solo"
+                                label="Введите город" append-inner-icon="mdi-magnify" prepend-inner-icon="mdi-star-outline"
+                                v-model="city" single-line hide-details @click:append-inner="searchWeather(city)"
                                 @click:prepend-inner="addCityFavorite(city)"></v-text-field>
+                            <v-text-field v-else :loading="loading" density="compact" variant="solo" label="Введите город"
+                                append-inner-icon="mdi-magnify" v-model="city" single-line hide-details
+                                @click:append-inner="searchWeather(city)"></v-text-field>
                         </v-card-text>
                     </v-card>
                     <v-alert dense text type="error" v-if="alert">
