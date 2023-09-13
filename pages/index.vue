@@ -165,7 +165,7 @@ export default {
                     } else {
                         var flag = true
                         while (flag) {
-                            console.log(date, logoutReq[0], date - logoutReq[0])
+                            // console.log(date, logoutReq[0], date - logoutReq[0])
                             if ((date - logoutReq[0]) > 3600000) {
                                 logoutReq.shift()
                             } else {
