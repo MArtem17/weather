@@ -1,6 +1,15 @@
-# Nuxt 3 Minimal Starter
+# Nuxt 3 Service Weather
+Использованы зависимости:
+vuetify - для использования компонентов vuetify на frontend
+mdi - подключен набор иконок
+prisma -для подключения и работы с базой данных PostgreSQL
+axios - для запросов клиент-сервер
 
-Look at the [Nuxt 3 documentation](https://nuxt.com/docs/getting-started/introduction) to learn more.
+Список избранного доступен только в автороизованном режиме
+Для проверки авторизации используется SessionStorage
+Для хранения истории запросов и контроля количества запросов используется LocalStorage
+Данные о пользователях хранятся в базе данных PostgreSQL в таблице users
+Для поиска погоды в городе необходимо указать название города в текстовом поле и нажать на значок поиска
 
 ## Setup
 
