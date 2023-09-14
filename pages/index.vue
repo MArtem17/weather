@@ -21,6 +21,9 @@
                         Для не авторизованного пользователя доступно только 15 запросов в час. Авторизуйтесь, чтобы
                         продолжить сейчас, или подождите час, чтобы продолжить без авторизации.
                     </v-alert>
+                    <v-alert dense text type="error" v-if="alertCityNotFound">
+                        Такого города нет, проверьте корректность введенных данных!
+                    </v-alert>
                     <v-card class="mx-auto pa-2" max-width="400">
                         <v-list v-if="login">
                             <v-list-subheader>Избранное:</v-list-subheader>
@@ -43,7 +46,7 @@
                     </v-card>
                 </v-col>
                 <v-col cols="12" md="9" style="padding-top: 50px;">
-                    <v-row v-if="loaded && weather.length">
+                    <v-row v-if="loaded && !alert">
                         <v-col cols="0" lg="1"></v-col>
                         <v-col v-for="(item, i) in weather" :key="i" cols="12" sm="4" lg="2">
                             <WeatherCard :weather="weather[i]" />
@@ -70,7 +73,8 @@ export default {
         weather: [],
         favorites: [],
         login: false,
-        alert: false
+        alert: false,
+        alertCityNotFound: false
     }),
     mounted() {
         window.addEventListener('update-sessionstorage', (event) => {
@@ -90,70 +94,18 @@ export default {
     methods: {
         async searchWeather(city) {
             this.loading = true
+            this.alertCityNotFound = false
+            this.alert = false
+            this.weather = []
             if (city)
                 await axios
                     .get(`http://api.openweathermap.org/geo/1.0/direct?q=${city}&limit=1&appid=4a7da37b8a1cddc50b5fe5df0b8508fe`)
                     .then(response => (this.info = response.data[0]));
             if (!this.info) {
                 this.city = ''
+                this.alertCityNotFound = true
                 this.loading = false
             } else {
-
-                await axios
-                    .get(`http://api.openweathermap.org/data/2.5/forecast?lat=${this.info.lat}&lon=${this.info.lon}&units=metric&lang=ru&appid=95dd9780b4e2f322c264186c465ae63e`)
-                    .then(response => (this.res = response.data.list));
-                this.weather = []
-                var temp = []
-                var weather = []
-                var icon = ''
-                for (let i = 0; i < this.res.length; i++) {
-                    switch (this.res[i].weather[0].main) {
-                        case 'Clear':
-                            icon = 'mdi-white-balance-sunny'
-                            break
-                        case 'Clouds':
-                            icon = 'mdi-weather-cloudy'
-                            break
-                        case 'Thunderstorm':
-                            icon = 'mdi-weather-lightning-rainy'
-                            break
-                        case 'Drizzle':
-                            icon = 'mdi-weather-rainy'
-                            break
-                        case 'Rain':
-                            icon = 'mdi-weather-pouring'
-                            break
-                        case 'Snow':
-                            icon = 'mdi-snowflake'
-                            break
-                        default:
-                            icon = 'mdi-weather-cloudy-alert'
-                            break
-                    }
-                    var item = {
-                        temp: Math.round(this.res[i].main.temp),
-                        weather_description: this.res[i].weather[0].description,
-                        icon: icon,
-                        clouds: this.res[i].clouds.all,
-                        wind_speed: Math.round(this.res[i].wind.speed),
-                        wind_gust: Math.round(this.res[i].wind.gust),
-                        pop: Math.round(this.res[i].pop * 100),
-                        date_time: this.res[i].dt_txt
-                    }
-                    if (i == 0) {
-                        temp.push(item)
-                    } else {
-                        var data_one = this.res[i - 1].dt_txt.split(' ')
-                        var data_two = this.res[i].dt_txt.split(' ')
-                        if (data_one[0] == data_two[0]) {
-                            temp.push(item)
-                        } else {
-                            weather.push(temp)
-                            temp = []
-                            temp.push(item)
-                        }
-                    }
-                }
                 if (!this.login) {
                     var logoutReq = []
                     if (JSON.parse(localStorage.getItem('logoutReq'))) {
@@ -164,11 +116,10 @@ export default {
                         logoutReq.push(date)
                         localStorage.setItem('logoutReq', JSON.stringify(logoutReq))
                         this.addItemHistory(city)
-                        this.weather = [...weather]
+                        this.apiWeather(city)
                     } else {
                         var flag = true
                         while (flag) {
-                            // console.log(date, logoutReq[0], date - logoutReq[0])
                             if ((date - logoutReq[0]) > 3600000) {
                                 logoutReq.shift()
                             } else {
@@ -179,14 +130,14 @@ export default {
                             logoutReq.push(date)
                             localStorage.setItem('logoutReq', JSON.stringify(logoutReq))
                             this.addItemHistory(city)
-                            this.weather = [...weather]
+                            this.apiWeather(city)
                         } else {
                             this.alert = true
                         }
                     }
                 } else {
                     this.addItemHistory(city)
-                    this.weather = [...weather]
+                    this.apiWeather(city)
                 }
                 this.loading = false
                 this.loaded = true
@@ -205,6 +156,61 @@ export default {
             }
             history.unshift(itemHistory)
             localStorage.setItem('history', JSON.stringify(history))
+        },
+        async apiWeather(city) {
+            await axios
+                .get(`http://api.openweathermap.org/data/2.5/forecast?lat=${this.info.lat}&lon=${this.info.lon}&units=metric&lang=ru&appid=95dd9780b4e2f322c264186c465ae63e`)
+                .then(response => (this.res = response.data.list));
+            var temp = []
+            var icon = ''
+            for (let i = 0; i < this.res.length; i++) {
+                switch (this.res[i].weather[0].main) {
+                    case 'Clear':
+                        icon = 'mdi-white-balance-sunny'
+                        break
+                    case 'Clouds':
+                        icon = 'mdi-weather-cloudy'
+                        break
+                    case 'Thunderstorm':
+                        icon = 'mdi-weather-lightning-rainy'
+                        break
+                    case 'Drizzle':
+                        icon = 'mdi-weather-rainy'
+                        break
+                    case 'Rain':
+                        icon = 'mdi-weather-pouring'
+                        break
+                    case 'Snow':
+                        icon = 'mdi-snowflake'
+                        break
+                    default:
+                        icon = 'mdi-weather-cloudy-alert'
+                        break
+                }
+                var item = {
+                    temp: Math.round(this.res[i].main.temp),
+                    weather_description: this.res[i].weather[0].description,
+                    icon: icon,
+                    clouds: this.res[i].clouds.all,
+                    wind_speed: Math.round(this.res[i].wind.speed),
+                    wind_gust: Math.round(this.res[i].wind.gust),
+                    pop: Math.round(this.res[i].pop * 100),
+                    date_time: this.res[i].dt_txt
+                }
+                if (i == 0) {
+                    temp.push(item)
+                } else {
+                    var data_one = this.res[i - 1].dt_txt.split(' ')
+                    var data_two = this.res[i].dt_txt.split(' ')
+                    if (data_one[0] == data_two[0]) {
+                        temp.push(item)
+                    } else {
+                        this.weather.push(temp)
+                        temp = []
+                        temp.push(item)
+                    }
+                }
+            }
         },
         async addCityFavorite(city) {
             if (city)
